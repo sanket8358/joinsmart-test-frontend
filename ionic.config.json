@@ -1,0 +1,8 @@
+{
+  "name": "JoinSmart",
+  "integrations": {
+    "capacitor": {},
+    "cordova": {}
+  },
+  "type": "angular"
+}

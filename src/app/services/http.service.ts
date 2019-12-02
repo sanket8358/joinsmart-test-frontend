@@ -22,6 +22,13 @@ export class HttpService {
     return this.http.post(url, JSON.stringify(data), options);
   }
 
+  postForLinkedin(serviceName: string, data: any, reqHeaders:any) {
+    const headers = new HttpHeaders(reqHeaders);
+    const options = { headers: headers, withCredintials: false };
+    const url = environment.apiUrl + serviceName;
+    return this.http.post(url, data, options);
+  }
+
   get(serviceName: string, reqHeaders:any) {
     const headers = new HttpHeaders(reqHeaders);
     const options = { headers: headers, withCredintials: false };
@@ -31,7 +38,7 @@ export class HttpService {
 
   getExternal(serviceName: string, reqHeaders:any) {
     const headers = new HttpHeaders(reqHeaders);
-    const options = { headers: headers, withCredintials: false };
+    const options = { headers: headers };
     const url =  serviceName;
     return this.http.get(url, options);
   }

@@ -44,7 +44,8 @@ export class LoginPage implements OnInit {
         (res: any) => {
           if (res.email) {
             // Storing the User data.
-            this.storageService.store(AuthConstants.AUTH, res);
+            this.storageService.store(AuthConstants.TOKEN, res.authenticationToken);
+            this.storageService.store(AuthConstants.AUTH, res.authenticationToken);
             this.router.navigate(['home/feed']);
           } else {
             this.toastService.presentToast('Incorrect email or password.');
@@ -62,8 +63,6 @@ export class LoginPage implements OnInit {
   }
 
   linkedInLogin(){
-    var data = this.linkedin.linkedInLogin();
-    this.toastService.presentToast(JSON.parse(data));
-    this.router.navigate(['home/feed']);
+     this.linkedin.linkedInLogin();
   }
 }

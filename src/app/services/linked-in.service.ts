@@ -2,29 +2,31 @@ import { Injectable } from '@angular/core';
 import { Platform } from '@ionic/angular';
 import { HttpService } from './http.service';
 import { ToastService } from './toast.service';
+import { AuthConstants } from '../config/auth-constants';
+import { StorageService } from './storage.service';
+import { Router } from '@angular/router';
 declare var cordova: any;
 @Injectable({
   providedIn: 'root'
 })
 export class LinkedInService {
 
-  constructor(private http: HttpService, private platform: Platform, private toast: ToastService) { }
-  linkedInLogin():any {
+  constructor(private http: HttpService, private platform: Platform, private toast: ToastService, private router:Router, private storageService: StorageService) { }
+  linkedInLogin() {
     console.log("in linked ");
     this.platform.ready().then(() => {
       this.loginInBrowser().then(success => {
         let headers = {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/json'
         };
-        this.toast.presentToast(success.code);
-        let body = "grant_type=authorization_code&code=" + success.code + "&redirect_uri=https://joinsmart.herokuapp.com/api/auth/callback&client_id=81sirvv927wpon&client_secret=t4OpCZ376aWqhOFe";
-        this.http.postExternal("https://www.linkedin.com/oauth/v2/accessToken", body, headers)
+        var code = { 'code': success.code };
+        this.http.postForLinkedin("api/auth/getaccesstoken", code, headers)
           .subscribe((res: any) => {
-            let result = JSON.parse(res);
-            if (result["access_token"] !== undefined) {
-              this.getLinkedInUserDetails(result["access_token"]).subscribe((res: any) => {
-                this.toast.presentToast(JSON.stringify(res));
-                return res;
+            if (res !== undefined) {
+              this.storageService.store(AuthConstants.TOKEN,res);
+              this.getLinkedInUserDetails(res.toString()).subscribe((res: any) => {
+                this.storageService.store(AuthConstants.AUTH,res);
+                this.router.navigate(['home/feed']);
               },
                 (error: any) => {
                   this.toast.presentToast(JSON.stringify(error));
@@ -55,19 +57,20 @@ export class LinkedInService {
             parsedResponse["code"] = code;
             resolve(parsedResponse);
           } else {
-            reject({'status':'failed'});
+            reject({ 'status': 'failed' });
           }
         }
       });
-
+      browserRef.addEventListener("exit", function (event) {
+        reject("The LinkedIn sign in flow was canceled");
+      });
     });
   }
 
   getLinkedInUserDetails(token: string) {
     let headers = {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': 'Bearer ' + token
+      'Content-Type': 'application/json'
     };
-    return this.http.getExternal("https://api.linkedin.com/v2/me", headers);
+    return this.http.postForLinkedin("api/auth/getuserprofile", { 'token': token }, headers);
   }
 }
